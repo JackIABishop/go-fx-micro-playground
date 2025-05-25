@@ -31,6 +31,16 @@ go run services/gateway/main.go
 ### Health Checks
 - `GET /health` → Returns `✅ <service> is up`
 
+### Rates Endpoint
+- `GET /rates` → Returns a JSON object mapping base currencies to target currency rates, for example:
+  ```json
+  {
+    "USD": {"EUR": 0.92, "GBP": 0.78, "JPY": 135.33},
+    "EUR": {"USD": 1.09, "GBP": 0.85},
+    "GBP": {"USD": 1.29, "EUR": 1.17}
+  }
+  ```
+
 ### Currency Conversion
 - `GET /convert?from=GBP&to=EUR&amount=200`
 
