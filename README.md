@@ -63,6 +63,27 @@ Example response:
 - Request logging
 - Swagger/OpenAPI docs
 
+## 🧪 Testing
+
+**Unit tests**  
+Run all unit tests for both services with:
+```bash
+go test ./...
+```
+
+Or individually:
+```bash
+go test services/rates
+go test services/gateway
+```
+
+**Integration tests**  
+After making `test.sh` executable (`chmod +x test.sh`), run:
+```bash
+./test.sh
+```
+This script starts both services, probes health and conversion endpoints, then tears them down.
+
 ## 🧠 Why?
 
 This is a hands-on playground to explore service separation, HTTP comms, Go idioms, and system design with a real-world use case.
