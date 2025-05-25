@@ -1,5 +1,3 @@
-
-
 # Go FX Micro-Playground 💱
 
 A tiny Go project designed to explore microservices architecture, with a working example of currency conversion.
@@ -19,9 +17,30 @@ go-fx-micro-playground/
 
 ## 🚀 Running the Services
 
+### 🐳 With Docker Compose (Recommended)
+
+Spin up both services with:
+
+```bash
+docker compose up --build
+```
+
+Then access:
+- `http://localhost:8081/health` for the Rates service
+- `http://localhost:8080/convert?from=USD&to=EUR&amount=100` for currency conversion
+
+To stop and clean up:
+```bash
+docker compose down --volumes --remove-orphans
+```
+
+---
+
+### 🧪 Dev Without Docker
+
 In two terminals:
 
-```
+```bash
 go run services/rates/main.go
 go run services/gateway/main.go
 ```
@@ -57,11 +76,15 @@ Example response:
 
 ## 💡 Future Plans
 
-- Dockerize services with `docker-compose`  
 - Add live FX rate updates from an external API  
 - Generate Swagger/OpenAPI documentation  
 
 ## 🧪 Testing
+
+**CI Workflows**
+
+- Unit tests are run automatically on every PR and push to `main` via GitHub Actions.
+- Docker-based integration tests validate the containerised services and `/convert` endpoint.
 
 **Unit tests**  
 Run all unit tests for both services with:
