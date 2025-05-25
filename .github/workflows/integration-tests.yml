@@ -1,0 +1,41 @@
+name: Integration Tests CI
+
+on:
+  push:
+    branches: [main, docker]
+  pull_request:
+    branches: [main]
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:24.0.2-dind
+        options: --privileged
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and run services
+        run: docker compose up --build -d
+
+      - name: Wait for services to become healthy
+        run: |
+          for i in {1..10}; do
+            curl -s http://localhost:8080/health && break
+            echo "Waiting for gateway..."
+            sleep 3
+          done
+
+      - name: Test /convert endpoint
+        run: |
+          curl --fail "http://localhost:8080/convert?from=USD&to=EUR&amount=100"
+
+      - name: Tear down
+        if: always()
+        run: docker compose down --volumes --remove-orphans
