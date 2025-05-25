@@ -12,26 +12,35 @@ func main() {
 		fmt.Fprintln(w, "✅ Gateway is up")
 	})
 
-	// Endpoint to perform a currency conversion
+	// Endpoint to perform multiple currency conversions
 	http.HandleFunc("/convert", func(w http.ResponseWriter, r *http.Request) {
 		// Call the /rates endpoint from the rates service
 		resp, err := http.Get("http://localhost:8081/rates")
 		if err != nil {
-			http.Error(w, "Failed to contact rates service", http.StatusInternalServerError)
+			http.Error(w, "❌ Failed to contact rates service", http.StatusInternalServerError)
 			return
 		}
 		defer resp.Body.Close()
 
-		// Decode the JSON response into a map
-		var rates map[string]float64
+		// Decode the JSON response into a nested map
+		var rates map[string]map[string]float64
 		if err := json.NewDecoder(resp.Body).Decode(&rates); err != nil {
-			http.Error(w, "Bad response from rates service", http.StatusInternalServerError)
+			http.Error(w, "❌ Bad response from rates service", http.StatusInternalServerError)
 			return
 		}
 
-		// Use the USD_EUR rate to simulate converting 100 USD to EUR
-		usdToEur := rates["USD_EUR"]
-		fmt.Fprintf(w, "💱 100 USD is %.2f EUR\n", 100*usdToEur)
+		// Simulate converting 100 units from various currencies
+		baseAmount := 100.0
+		output := "💸 Currency Conversions for 100 units:\n\n"
+		for base, conversions := range rates {
+			for target, rate := range conversions {
+				converted := baseAmount * rate
+				output += fmt.Sprintf("🔁 %3.0f %s ➡️ %.2f %s\n", baseAmount, base, converted, target)
+			}
+		}
+
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Write([]byte(output))
 	})
 
 	fmt.Println("🚀 Gateway running on :8080")
