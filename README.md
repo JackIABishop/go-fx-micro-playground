@@ -59,7 +59,6 @@ Example response:
 
 - Dockerize services with `docker-compose`  
 - Add live FX rate updates from an external API  
-- Set up CI/CD pipeline (GitHub Actions) for automated testing  
 - Generate Swagger/OpenAPI documentation  
 
 ## 🧪 Testing
