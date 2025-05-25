@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/JackIABishop/go-fx-micro-playground/internal/logging"
 )
 
 func getRates() map[string]map[string]float64 {
@@ -25,10 +27,12 @@ func getRates() map[string]map[string]float64 {
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
+	logging.Logger.Println("💓 /health hit")
 	fmt.Fprintln(w, "✅ Rates service is up")
 }
 
 func handleRates(w http.ResponseWriter, r *http.Request) {
+	logging.Logger.Println("📊 /rates hit")
 	w.Header().Set("Content-Type", "application/json")
 	rates := getRates()
 	json.NewEncoder(w).Encode(rates)
@@ -47,8 +51,9 @@ func setupRoutes() {
 }
 
 func main() {
+	logging.Init()
 	setupRoutes()
-	fmt.Println("🚀 Rates service running on :8081")
+	logging.Logger.Println("🚀 Rates service running on :8081")
 	// Start HTTP server on port 8081
 	http.ListenAndServe(":8081", nil)
 }
