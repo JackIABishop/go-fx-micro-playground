@@ -9,6 +9,9 @@ import (
 	"github.com/JackIABishop/go-fx-micro-playground/internal/logging"
 )
 
+// ratesServiceURL is the endpoint used to fetch FX rates; can be overridden in tests.
+var ratesServiceURL = "http://rates:8081/rates"
+
 func handleHealth(w http.ResponseWriter, r *http.Request) {
 	logging.Logger.Println("💓 /health hit")
 	fmt.Fprintln(w, "✅ Gateway is up")
@@ -31,7 +34,7 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 	logging.Logger.Printf("💬 Received conversion request: from=%s to=%s amount=%f", from, to, amount)
 
 	// Call the /rates endpoint from the rates service to get current currency rates
-	resp, err := http.Get("http://rates:8081/rates")
+	resp, err := http.Get(ratesServiceURL)
 	if err != nil {
 		logging.Logger.Printf("❌ Error contacting rates service: %v", err)
 		http.Error(w, "❌ Failed to contact rates service", http.StatusInternalServerError)

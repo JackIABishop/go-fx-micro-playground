@@ -2,28 +2,34 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/JackIABishop/go-fx-micro-playground/internal/logging"
 )
 
-func getRates() map[string]map[string]float64 {
-	return map[string]map[string]float64{
-		"USD": {
-			"EUR": 0.92,
-			"GBP": 0.78,
-			"JPY": 135.33,
-		},
-		"EUR": {
-			"USD": 1.09,
-			"GBP": 0.85,
-		},
-		"GBP": {
-			"USD": 1.29,
-			"EUR": 1.17,
-		},
+func validateRates(rates map[string]map[string]float64) error {
+	if len(rates) == 0 {
+		return errors.New("rates payload is empty")
 	}
+	for base, targets := range rates {
+		if base == "" {
+			return errors.New("base currency code cannot be empty")
+		}
+		if len(targets) == 0 {
+			return fmt.Errorf("no target rates provided for %s", base)
+		}
+		for to, rate := range targets {
+			if to == "" {
+				return errors.New("target currency code cannot be empty")
+			}
+			if rate <= 0 {
+				return fmt.Errorf("invalid rate for %s->%s: %f", base, to, rate)
+			}
+		}
+	}
+	return nil
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
@@ -32,10 +38,31 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleRates(w http.ResponseWriter, r *http.Request) {
-	logging.Logger.Println("📊 /rates hit")
-	w.Header().Set("Content-Type", "application/json")
-	rates := getRates()
-	json.NewEncoder(w).Encode(rates)
+	switch r.Method {
+	case http.MethodGet:
+		logging.Logger.Println("📊 GET /rates hit")
+		w.Header().Set("Content-Type", "application/json")
+		rates := loadRates()
+		json.NewEncoder(w).Encode(rates)
+
+	case http.MethodPost:
+		logging.Logger.Println("📥 POST /rates hit")
+		var newRates map[string]map[string]float64
+		if err := json.NewDecoder(r.Body).Decode(&newRates); err != nil {
+			http.Error(w, "invalid JSON body", http.StatusBadRequest)
+			return
+		}
+		if err := validateRates(newRates); err != nil {
+			http.Error(w, fmt.Sprintf("invalid rate data: %v", err), http.StatusBadRequest)
+			return
+		}
+		saveRatesToFile(savedRatesFile, newRates)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"message": "rates updated"})
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
 }
 
 // ⚠️ NOTE:
