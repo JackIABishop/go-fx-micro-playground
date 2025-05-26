@@ -30,7 +30,6 @@ func loadRates() map[string]map[string]float64 {
 	logging.Logger.Printf("🐛 Current working directory: %s", cwd)
 	rates, err := readRatesFromFile(newRatesFile)
 	if err == nil {
-		saveRatesToFile(savedRatesFile, rates)
 		return rates
 	}
 
@@ -44,9 +43,7 @@ func loadRates() map[string]map[string]float64 {
 	return map[string]map[string]float64{}
 }
 
-// TODO: Use `saved_rates.json` as persistent cache for fetched rates.
 // Fallback to default rates if not available. Will also support syncing with an external API.
-
 func saveRatesToFile(path string, rates map[string]map[string]float64) {
 	data, err := json.MarshalIndent(rates, "", "  ")
 	if err != nil {
