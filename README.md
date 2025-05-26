@@ -50,6 +50,7 @@ go run services/gateway/main.go
 ### Health Checks
 - `GET /health` → Returns `✅ <service> is up`
 
+
 ### Rates Endpoint
 - `GET /rates` → Returns a JSON object mapping base currencies to target currency rates, for example:
   ```json
@@ -59,6 +60,22 @@ go run services/gateway/main.go
     "GBP": {"USD": 1.29, "EUR": 1.17}
   }
   ```
+
+### Update Rates Endpoint
+- `POST /rates` → Accepts a JSON body mapping base currencies to target currency rates, e.g.: 
+
+  ```json
+  {
+    "USD": {"EUR": 0.95, "GBP": 0.82},
+    "EUR": {"USD": 1.05}
+  }
+  ```
+
+- Validates that each currency code is non-empty and all rates are positive.
+- Returns:
+  - `200 OK` with body `{"message":"rates updated"}` on success
+  - `400 Bad Request` for malformed JSON or invalid data
+  - `405 Method Not Allowed` for other HTTP methods
 
 ### Currency Conversion
 - `GET /convert?from=GBP&to=EUR&amount=200`
