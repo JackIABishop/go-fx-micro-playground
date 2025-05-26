@@ -7,41 +7,54 @@ import (
 	"github.com/JackIABishop/go-fx-micro-playground/internal/logging"
 )
 
-var ratesFile = "rates.json"
+var savedRatesFile = "saved_rates.json"
+var newRatesFile = "new_rates.json"
 
-func loadRates() map[string]map[string]float64 {
-	file, err := os.ReadFile(ratesFile)
+func readRatesFromFile(path string) (map[string]map[string]float64, error) {
+	file, err := os.ReadFile(path)
 	if err != nil {
-		logging.Logger.Printf("⚠️ Could not read %s: %v — using default rates", ratesFile, err)
-		return getDefaultRates()
+		logging.Logger.Printf("⚠️ Failed to load rates from %s: %v", path, err)
+		return nil, err
 	}
-
 	var rates map[string]map[string]float64
 	if err := json.Unmarshal(file, &rates); err != nil {
-		logging.Logger.Printf("⚠️ Invalid JSON in %s: %v — using default rates", ratesFile, err)
-		return getDefaultRates()
+		logging.Logger.Printf("⚠️ Failed to load rates from %s: %v", path, err)
+		return nil, err
 	}
-
-	logging.Logger.Printf("✅ Loaded rates from %s", ratesFile)
-	return rates
+	logging.Logger.Printf("✅ Loaded rates from %s", path)
+	return rates, nil
 }
 
-// TODO: I'd like to save this data in a saved_rates.json file rather than hardcoding it.
-// TODO: THEN I can have a function which tries to retrieve the latest rates from the 'api_file' and save it into saved_rates.json
-func getDefaultRates() map[string]map[string]float64 {
-	return map[string]map[string]float64{
-		"USD": {
-			"EUR": 0.92,
-			"GBP": 0.78,
-			"JPY": 135.33,
-		},
-		"EUR": {
-			"USD": 1.09,
-			"GBP": 0.85,
-		},
-		"GBP": {
-			"USD": 1.29,
-			"EUR": 1.17,
-		},
+func loadRates() map[string]map[string]float64 {
+	rates, err := readRatesFromFile(newRatesFile)
+	if err == nil {
+		saveRatesToFile(savedRatesFile, rates)
+		return rates
+	}
+
+	rates, err = readRatesFromFile(savedRatesFile)
+	if err == nil {
+		return rates
+	}
+
+	// Fallback to empty set
+	logging.Logger.Printf("❌ No rates available from any source, returning empty set")
+	return map[string]map[string]float64{}
+}
+
+// TODO: Use `saved_rates.json` as persistent cache for fetched rates.
+// Fallback to default rates if not available. Will also support syncing with an external API.
+
+func saveRatesToFile(path string, rates map[string]map[string]float64) {
+	data, err := json.MarshalIndent(rates, "", "  ")
+	if err != nil {
+		logging.Logger.Printf("❌ Failed to marshal rates: %v", err)
+		return
+	}
+
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		logging.Logger.Printf("❌ Failed to write rates to file %s: %v", path, err)
+	} else {
+		logging.Logger.Printf("💾 Rates successfully saved to %s", path)
 	}
 }
