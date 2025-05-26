@@ -7,8 +7,8 @@ import (
 	"github.com/JackIABishop/go-fx-micro-playground/internal/logging"
 )
 
-var savedRatesFile = "saved_rates.json"
-var newRatesFile = "new_rates.json"
+var savedRatesFile = "/app/services/rates/saved_rates.json"
+var newRatesFile = "/app/services/rates/new_rates.json"
 
 func readRatesFromFile(path string) (map[string]map[string]float64, error) {
 	file, err := os.ReadFile(path)
@@ -26,6 +26,8 @@ func readRatesFromFile(path string) (map[string]map[string]float64, error) {
 }
 
 func loadRates() map[string]map[string]float64 {
+	cwd, _ := os.Getwd()
+	logging.Logger.Printf("🐛 Current working directory: %s", cwd)
 	rates, err := readRatesFromFile(newRatesFile)
 	if err == nil {
 		saveRatesToFile(savedRatesFile, rates)

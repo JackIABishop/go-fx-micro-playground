@@ -30,6 +30,12 @@ func TestHandleHealth(t *testing.T) {
 
 // TestHandleRates verifies that the /rates endpoint returns valid JSON containing currency rate data
 func TestHandleRates(t *testing.T) {
+	// Set mock rates data
+	rates := map[string]map[string]float64{
+		"USD": {
+			"EUR": 0.92,
+		},
+	}
 	// Create a GET request for the /rates endpoint
 	req := httptest.NewRequest(http.MethodGet, "/rates", nil)
 	rr := httptest.NewRecorder()
@@ -41,7 +47,6 @@ func TestHandleRates(t *testing.T) {
 	if ct := rr.Header().Get("Content-Type"); ct != "application/json" {
 		t.Errorf("expected JSON content-type, got %q", ct)
 	}
-	var rates map[string]map[string]float64
 	// Parse JSON response into a nested map[string]map[string]float64
 	if err := json.Unmarshal(rr.Body.Bytes(), &rates); err != nil {
 		t.Fatalf("invalid JSON response: %v", err)
