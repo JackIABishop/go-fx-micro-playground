@@ -8,24 +8,6 @@ import (
 	"github.com/JackIABishop/go-fx-micro-playground/internal/logging"
 )
 
-func getRates() map[string]map[string]float64 {
-	return map[string]map[string]float64{
-		"USD": {
-			"EUR": 0.92,
-			"GBP": 0.78,
-			"JPY": 135.33,
-		},
-		"EUR": {
-			"USD": 1.09,
-			"GBP": 0.85,
-		},
-		"GBP": {
-			"USD": 1.29,
-			"EUR": 1.17,
-		},
-	}
-}
-
 func handleHealth(w http.ResponseWriter, r *http.Request) {
 	logging.Logger.Println("💓 /health hit")
 	fmt.Fprintln(w, "✅ Rates service is up")
@@ -34,7 +16,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 func handleRates(w http.ResponseWriter, r *http.Request) {
 	logging.Logger.Println("📊 /rates hit")
 	w.Header().Set("Content-Type", "application/json")
-	rates := getRates()
+	rates := loadRates()
 	json.NewEncoder(w).Encode(rates)
 }
 
