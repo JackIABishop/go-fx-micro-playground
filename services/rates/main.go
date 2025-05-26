@@ -56,6 +56,20 @@ func handleRates(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, fmt.Sprintf("invalid rate data: %v", err), http.StatusBadRequest)
 			return
 		}
+		// Load existing rates from file
+		existing := loadRates()
+		// Merge new rates into existing
+		for base, targets := range newRates {
+			if existing[base] == nil {
+				existing[base] = targets
+			} else {
+				for to, rate := range targets {
+					existing[base][to] = rate
+				}
+			}
+		}
+		// Use merged map for saving
+		newRates = existing
 		saveRatesToFile(savedRatesFile, newRates)
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{"message": "rates updated"})

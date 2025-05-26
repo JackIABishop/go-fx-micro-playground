@@ -16,6 +16,55 @@ func init() {
 	logging.Init()
 }
 
+// TestHandleRates_Post_Merge verifies POST /rates merges incoming rates with existing ones
+func TestHandleRates_Post_Merge(t *testing.T) {
+	dir := t.TempDir()
+	// Override file paths
+	savedRatesFile = filepath.Join(dir, "saved_rates.json")
+	newRatesFile = filepath.Join(dir, "new_rates.json")
+
+	// Write initial saved rates: USD->EUR=0.92, GBP->USD=1.27
+	initial := `{"USD":{"EUR":0.92},"GBP":{"USD":1.27}}`
+	if err := os.WriteFile(savedRatesFile, []byte(initial), 0644); err != nil {
+		t.Fatalf("failed to write initial saved rates: %v", err)
+	}
+
+	// POST payload updates USD->EUR to 0.95 and adds AUD->USD=0.66
+	payload := `{"USD":{"EUR":0.95},"AUD":{"USD":0.66}}`
+	req := httptest.NewRequest(http.MethodPost, "/rates", strings.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	rr := httptest.NewRecorder()
+
+	logging.Init()
+	handleRates(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rr.Code)
+	}
+
+	// Read back merged rates
+	data, err := os.ReadFile(savedRatesFile)
+	if err != nil {
+		t.Fatalf("failed to read merged rates file: %v", err)
+	}
+	var merged map[string]map[string]float64
+	if err := json.Unmarshal(data, &merged); err != nil {
+		t.Fatalf("invalid JSON in merged file: %v", err)
+	}
+	// Check that USD->EUR was updated
+	if merged["USD"]["EUR"] != 0.95 {
+		t.Errorf("expected USD->EUR=0.95, got %f", merged["USD"]["EUR"])
+	}
+	// Check that GBP->USD remains unchanged
+	if merged["GBP"]["USD"] != 1.27 {
+		t.Errorf("expected GBP->USD=1.27, got %f", merged["GBP"]["USD"])
+	}
+	// Check that AUD->USD was added
+	if merged["AUD"]["USD"] != 0.66 {
+		t.Errorf("expected AUD->USD=0.66, got %f", merged["AUD"]["USD"])
+	}
+}
+
 // TestHandleRates_Post_InvalidJSON verifies POST /rates with malformed JSON returns 400 Bad Request.
 func TestHandleRates_Post_InvalidJSON(t *testing.T) {
 	dir := t.TempDir()
