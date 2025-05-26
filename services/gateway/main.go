@@ -31,7 +31,7 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 	logging.Logger.Printf("💬 Received conversion request: from=%s to=%s amount=%f", from, to, amount)
 
 	// Call the /rates endpoint from the rates service to get current currency rates
-	resp, err := http.Get("http://localhost:8081/rates")
+	resp, err := http.Get("http://rates:8081/rates")
 	if err != nil {
 		logging.Logger.Printf("❌ Error contacting rates service: %v", err)
 		http.Error(w, "❌ Failed to contact rates service", http.StatusInternalServerError)
