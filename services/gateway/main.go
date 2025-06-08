@@ -12,8 +12,15 @@ import (
 
 var apiKey = os.Getenv("API_KEY")
 
+// disableAuth bypasses authentication when set to true (e.g., for health checks)
+var disableAuth = os.Getenv("DISABLE_AUTH") == "true"
+
 func requireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if disableAuth {
+			next(w, r)
+			return
+		}
 		token := r.Header.Get("Authorization")
 		if token != "Bearer "+apiKey {
 			logging.Logger.Printf("🔒 auth fail: %q", token)
