@@ -9,6 +9,8 @@ on:
 jobs:
   integration-test:
     runs-on: ubuntu-latest
+    env:
+      API_KEY: ${{ secrets.API_KEY }}
     services:
       docker:
         image: docker:24.0.2-dind
@@ -20,6 +22,9 @@ jobs:
 
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
+
+      - name: Generate .env for Compose
+        run: echo "API_KEY=${API_KEY}" > .env
 
       - name: Build and run services
         run: docker compose up --build -d
@@ -44,7 +49,9 @@ jobs:
       - name: Test /convert endpoint
         run: |
           echo "🔍 Testing /convert endpoint:"
-          curl -v --fail "http://localhost:8080/convert?from=USD&to=EUR&amount=100"
+          curl -v --fail \
+            -H "Authorization: Bearer $API_KEY" \
+            "http://localhost:8080/convert?from=USD&to=EUR&amount=100"
 
       - name: Tear down
         if: always()

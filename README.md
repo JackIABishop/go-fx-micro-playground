@@ -34,6 +34,8 @@ To stop and clean up:
 docker compose down --volumes --remove-orphans
 ```
 
+> **Note:** Use a `.env` file to set your `API_KEY` for authentication or set `DISABLE_AUTH=true` to disable auth for local development.
+
 ---
 
 ### 🧪 Dev Without Docker
@@ -91,10 +93,16 @@ Example response:
 }
 ```
 
-## 💡 Future Plans
+### Authentication
 
-- Add live FX rate updates from an external API  
-- Generate Swagger/OpenAPI documentation  
+The `/convert` endpoint requires an `Authorization` header with a Bearer token matching the configured `API_KEY`:
+
+```
+Authorization: Bearer <API_KEY>
+```
+
+For local development, authentication can be disabled by setting the environment variable `DISABLE_AUTH=true`.
+
 
 ## 🧪 Testing
 
@@ -125,3 +133,13 @@ This script starts both services, probes health and conversion endpoints, then t
 ## 🧠 Why?
 
 This is a hands-on playground to explore service separation, HTTP comms, Go idioms, and system design with a real-world use case.
+
+## 🎉 Wrap-up
+Thank you for exploring the Go FX Micro-Playground! This project demonstrates core microservice patterns in Go and provides a foundation for further experimentation.
+
+## 🚀 Stretch Goals
+
+If you’d like to fork this project and take it further, consider:
+
+- Add live FX rate updates from an external API
+- Generate Swagger/OpenAPI documentation

@@ -4,10 +4,32 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/JackIABishop/go-fx-micro-playground/internal/logging"
 )
+
+var apiKey = os.Getenv("API_KEY")
+
+// disableAuth bypasses authentication when set to true (e.g., for health checks)
+var disableAuth = os.Getenv("DISABLE_AUTH") == "true"
+
+func requireAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if disableAuth {
+			next(w, r)
+			return
+		}
+		token := r.Header.Get("Authorization")
+		if token != "Bearer "+apiKey {
+			logging.Logger.Printf("🔒 auth fail: %q", token)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		next(w, r)
+	}
+}
 
 // ratesServiceURL is the endpoint used to fetch FX rates; can be overridden in tests.
 var ratesServiceURL = "http://rates:8081/rates"
@@ -89,8 +111,11 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 // This is a simplified setup for learning purposes.
 // In production systems, a router would typically be used for more flexibility and features.
 func setupRoutes() {
+	// Public health check
 	http.HandleFunc("/health", handleHealth)
-	http.HandleFunc("/convert", handleConvert)
+
+	// Protected endpoints
+	http.HandleFunc("/convert", requireAuth(handleConvert))
 }
 
 func main() {
